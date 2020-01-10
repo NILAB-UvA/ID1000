@@ -1,5 +1,5 @@
 subs = dir('../../raw/ID*');
-bids_dir = '../bids2';
+bids_dir = '..';
 for i = 1:numel(subs)
     fprintf(['\nProcessing ' subs(i).name]) 
     cdir = ['../../raw/' subs(i).name];
@@ -20,7 +20,6 @@ for i = 1:numel(subs)
         
         subname = strrep(subs(i).name, 'ID', 'sub-');
         fn = [bids_dir '/' subname '/dwi/' subname '_' runstr '_dwi.bvec'];
-        fn
         dlmwrite(fn, bvec, ' ');
         
         fn = [bids_dir '/' subname '/dwi/' subname '_' runstr '_dwi.bval'];

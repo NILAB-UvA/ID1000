@@ -1,10 +1,18 @@
 import numpy as np 
 import nibabel as nib
 import json
+from glob import glob
+import nibabel
+from tqdm import tqdm
 
-N_SLICES = 42
-TR = 2
-slicetimes = np.linspace(0, TR - TR / N_SLICES, N_SLICES).round(4).tolist()
+funcs = glob('../sub*/func/*.nii.gz')
+for func in tqdm(funcs):
+    N_SLICES = nib.load(func).shape[2]
+    TR = 2.2
+    slicetimes = np.linspace(0, TR - TR / N_SLICES, N_SLICES).round(4).tolist()
+    f_out = func.replace('.nii.gz', '.json')
+    with open(f_out, 'w') as f:
+        json.dump({'SliceTiming': slicetimes}, f, indent=4)
 
 wfs_hz =  434.214
 wfs_ppm = 12.482
