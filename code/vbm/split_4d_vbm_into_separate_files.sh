@@ -12,6 +12,6 @@ for i in ${!files[@]}; do
   if [ ! -d $sub_deriv_dir ]; then
     mkdir $sub_deriv_dir
   fi
-  new_name=${sub_deriv_dir}/${sub}_GMvolume.nii.gz
+  new_name=${sub_deriv_dir}/${sub}_method-VBM_GMvolume.nii.gz
   mv ${files[$i]} ${new_name}
 done

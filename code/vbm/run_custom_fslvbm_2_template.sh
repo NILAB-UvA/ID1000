@@ -107,7 +107,7 @@ fi
 echo "FMRIPREP dir = ${fmriprep_dir}"
 
 if [ -z "$4" ]; then
-    out_dir=${PWD}/vbm
+    out_dir=${fmriprep_dir}/derivatives/vbm
 else
     out_dir=$4
 fi

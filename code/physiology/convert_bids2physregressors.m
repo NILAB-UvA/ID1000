@@ -15,7 +15,7 @@ for i=1:numel(subs)
        this_func = strrep(this_phys,'recording-respcardiac_physio.tsv.gz', 'bold.nii.gz');    
        save_dir = fullfile('../../derivatives/physiology', sub_base, 'physio');
        try
-           run_physIO(this_phys, this_func, 496, save_dir, 0, 0);
+           run_physIO(this_phys, this_func, 496, save_dir, 1, 0, 1);
        catch
            fprintf('\n--------------\nFAILED!!! %s \n--------------\n\n', this_phys);
            FAILED{end+1} = this_phys;
