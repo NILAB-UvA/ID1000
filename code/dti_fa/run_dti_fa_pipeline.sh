@@ -40,6 +40,11 @@ echo "Found ${#sub_dirs[@]} sub dirs!"
 
 for sub_dir in ${sub_dirs[@]}; do
     sub=$(basename ${sub_dir})
+    s_out=${out_dir}/${sub}        
+    if [ ! -d ${s_out} ]; then
+        mkdir ${s_out}
+    fi
+
     echo "Running BET and DTIFIT on ${sub}"
     dwis=($(ls ${sub_dir}/dwi/*.nii.gz))
     for dwi in ${dwis[@]}; do 
@@ -54,22 +59,49 @@ for sub_dir in ${sub_dirs[@]}; do
         bvec=${dwi/.nii.gz/.bvec}
         bval=${dwi/.nii.gz/.bval}
 
-        s_out=${out_dir}/${sub}
-        if [ ! -d ${s_out} ]; then
-            mkdir ${s_out}
-        fi
-
-        dtifit -k ${dwi} -o ${s_out}/${sub}_space-native -m ${b0/.nii.gz/_mask.nii.gz} -r ${bvec} -b ${bval} >/dev/null
-        mv ${b0/.nii.gz/_mask.nii.gz} ${s_out}/${sub}_space-native_desc-brain_mask.nii.gz
-
+        dtifit -k ${dwi} -o ${s_out}/${basen/_dwi.nii.gz}_space-native.nii.gz -m ${b0/.nii.gz/_mask.nii.gz} -r ${bvec} -b ${bval} >/dev/null
+        mv ${b0/.nii.gz/_mask.nii.gz} ${s_out}/${basen/_dwi.nii.gz}_space-native_desc-brain_mask.nii.gz
         for mod in L1 L2 L3 MO S0 V2 V3; do
-            rm ${s_out}/${sub}_space-native_${mod}.nii.gz
+            rm ${s_out}/${basen/_dwi.nii.gz}_space-native_${mod}.nii.gz
         done
-
     done
+    
+    ############# AVERAGING ####################
+    fas=($(ls ${s_out}/*space-native_FA.nii.gz))
+    n=${#fas[@]}
+    middle=$(( $n / 2 ))
+    for i in `seq 0 $(( $n - 1 ))` ; do
+        if [ $i -eq $middle ] ; then
+            continue
+        fi
+        flirt -in ${fas[i]} -ref ${fas[middle]} -dof 6 -out ${fas[i]/.nii.gz/_flirt.nii.gz} -omat ${s_out}/tmp.mat
+        for mod in V1 MD; do
+            f_in=${fas[i]/FA/${mod}}
+            flirt -in ${f_in} -ref ${fas[middle]} -applyxfm -init ${s_out}/tmp.mat -out ${f_in/.nii.gz/_flirt.nii.gz}
+        done
+    done
+    for mod in FA MD V1; do
+        f_in=${fas[middle]/FA/${mod}}
+        mv ${f_in} ${f_in/.nii.gz/_flirt.nii.gz}
+    done
+    rm ${s_out}/tmp.mat
+
+    for mod in FA MD; do
+        fslmerge -t ${s_out}/av_${mod}.nii.gz `ls ${s_out}/*${mod}_flirt.nii.gz`
+        fslmaths ${s_out}/av_${mod}.nii.gz -Tmean ${s_out}/${sub}_space-native_desc-average_${mod}.nii.gz
+        rm ${s_out}/av_${mod}.nii.gz
+    done
+    
+    v1s=($(ls ${s_out}/*V1_flirt.nii.gz))
+    cmd="fslmaths ${v1s[0]}"
+    for i in `seq 1 $(( $n - 1 ))` ; do
+        cmd="$cmd -add ${v1s[i]}"
+    done
+    cmd="$cmd -div ${#v1s[@]} ${s_out}/${sub}_space-native_desc-average_V1.nii.gz"
+    rm ${s_out}/*run*.nii.gz
 done
 
-### FNIRT ###
+################## FNIRT ###
 sub_dirs_d=($(ls -d ${out_dir}/sub-*))
 
 for sub_dir in ${sub_dirs_d[@]}; do
@@ -99,35 +131,4 @@ for sub_dir in ${sub_dirs_d[@]}; do
         rm ${sub_dir}/*.mat
         rm ${sub_dir}/*.log
     done
-
-    #for mod in V1 FA MD; do
-    #    echo "Working on ${mod} image"
-    #    imgs=($(ls ${sub_dir}/*space-native*${mod}.nii.gz))
-    #    for img in ${imgs[@]}; do
-
-    #	    if [ "${mod}" = "V1" ]; then
-    #		fslsplit ${img} ${img/.nii.gz/_dir} -t
-    #		fslsplit $FSLDIR/data/standard/FSL_HCP1065_V1_1mm.nii.gz ${sub_dir}/tmp_dir -t
-    #            for i in 0 1 2; do
-    #		    f_in=${img/.nii.gz/_dir000${i}}
-    #		    echo "f_in ${f_in}"
-    #		    echo "f_out ${f_in/native/FSLHCP1065}"
-    #                fsl_reg ${f_in} ${sub_dir}/tmp_dir000${i}.nii.gz ${f_in/native/FSLHCP1065} -FA
-    #	        done
-    #		fslmerge ${img/native/FSLHCP1065} $(ls ${sub_dir}/*space-FSLHCP1065*dir*.nii.gz) -t
-    #		rm ${sub_dir}/*dir*.nii.gz
-
-    #	    else
-    #            echo "Not a V1 image!"
-    #            out=${img/native/FSLHCP1065}
-    #            out=${out/.nii.gz/}
-    #            fsl_reg ${img} $FSLDIR/data/standard/FSL_HCP1065_${mod}_1mm.nii.gz ${out} -FA
-    #	    fi
-
-    #	    rm ${out}_warp.msf
-    #        rm ${out}_warp.nii.gz
-    #        rm ${out}.mat
-    #        rm ${img/.nii.gz/_to_FSL_HCP1065_${mod}_1mm.log}
-    #    done
-    #done
 done
