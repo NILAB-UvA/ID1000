@@ -1,6 +1,7 @@
 bids_dir=`realpath ..`
 out_dir=$bids_dir/derivatives/mriqc
-n_jobs=20
+work_dir=`realpath ../../mriqc_work`
+n_jobs=5
 
 subs=`ls -d1 $bids_dir/sub-????`
 # Run subjects one at the time as to avoid memory issues
@@ -19,6 +20,7 @@ for sub in $subs; do
         --participant_label $label \
         --nprocs 1 \
         --float32 \
+        -w $work_dir \
         --fft-spikes-detector \
         --ants-nthreads 1 \
         --deoblique \

@@ -30,7 +30,7 @@ if [ ! -d ${out_dir} ]; then
     mkdir -p ${out_dir}
 fi
 
-tmp_dir=${bids_dir}/tmp
+tmp_dir=${out_dir}/tmp
 if [ ! -d ${tmp_dir} ]; then
     mkdir ${tmp_dir}
 fi
@@ -84,8 +84,9 @@ for sub_dir in ${sub_dirs[@]}; do
         f_in=${fas[middle]/FA/${mod}}
         mv ${f_in} ${f_in/.nii.gz/_flirt.nii.gz}
     done
-    rm ${s_out}/tmp.mat
-
+    if [ -f ${s_out}/tmp.mat ]; then
+        rm ${s_out}/tmp.mat
+    fi
     for mod in FA MD; do
         fslmerge -t ${s_out}/av_${mod}.nii.gz `ls ${s_out}/*${mod}_flirt.nii.gz`
         fslmaths ${s_out}/av_${mod}.nii.gz -Tmean ${s_out}/${sub}_space-native_desc-average_${mod}.nii.gz
@@ -98,6 +99,8 @@ for sub_dir in ${sub_dirs[@]}; do
         cmd="$cmd -add ${v1s[i]}"
     done
     cmd="$cmd -div ${#v1s[@]} ${s_out}/${sub}_space-native_desc-average_V1.nii.gz"
+    eval "$cmd"
+    mv ${fas[middle]/_FA/_desc-brain_mask} ${s_out}/${sub}_space-native_desc-brain_mask.nii.gz
     rm ${s_out}/*run*.nii.gz
 done
 

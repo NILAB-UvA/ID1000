@@ -1,8 +1,9 @@
 bids_dir=`realpath ..`
 out_dir=$bids_dir/derivatives
-n_jobs=20
+work_dir=`realpath ../../fmriprep_work`
+n_jobs=1
 
-subs=(`ls -d1 $bids_dir/sub-*`)
+subs=(`ls -d1 $bids_dir/sub-0938`)
 # Run subjects one at the time as to avoid memory issues
 
 i=0
@@ -19,14 +20,14 @@ for sub in ${subs[@]}; do
     cmd='fmriprep-docker $bids_dir $out_dir
         --image poldracklab/fmriprep:1.4.1
         --participant-label $label
-        --nthreads 1
-        --omp-nthreads 1
+        --nthreads 5
+        --omp-nthreads 5
         --ignore slicetiming
 	--use-syn-sdc
         --output-spaces T1w MNI152NLin2009cAsym fsaverage5
         --skip-bids-validation
         -u 1002:1002
-        -w $out_dir/fmriprep_work
+        -w $work_dir
         --fs-license-file /usr/local/freesurfer/license.txt
         --notrack'
 
