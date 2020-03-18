@@ -5,7 +5,7 @@ import nibabel as nib
 from glob import glob
 from scipy.stats import pearsonr
 
-subs = sorted(glob('sub-*'))
+subs = sorted(glob('../../sub-*'))
 for sub in subs:
     dwis = sorted(glob(sub + '/dwi/*.nii.gz'))
     n_z = np.array([nib.load(d).header['dim'][3] for d in dwis])
@@ -33,7 +33,7 @@ for sub in subs:
                 print(f"Fixing {d} because z = {z}, but min_z = {min_z}")
                 print(f"Best corr = {best}, index = {best_idx}\n")
 
-                shutil.copyfile(d, op.join('..', '..', '..' 'dwi_backup', op.basename(d)))   
+                shutil.copyfile(d, op.join('..', '..', '..', 'dwi_backup', op.basename(d)))   
                 d_data = d_img.get_fdata()
                 d_data = d_data[:, :, best_idx[0]:(z-best_idx[1])]
                 d_img = nib.Nifti1Image(d_data, affine=d_img.affine)
