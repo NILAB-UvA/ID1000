@@ -1,4 +1,4 @@
-# PIOP1
+# ID1000
 This repository contains some metadata and code used to curate/preprocess the ID1000 dataset, which is part of the Amsterdam Open MRI Collection (AOMIC).
 The actual data can be found on [Openneuro](TO ADD).
 The contents of this dataset are described in detail in [this preprint].
